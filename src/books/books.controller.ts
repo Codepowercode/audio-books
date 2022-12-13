@@ -34,14 +34,13 @@ import { UpdateAudioDto } from './dto/update-audio.dto';
 import { GetPagination } from 'src/decorator';
 import { GetUser } from '../auth/decorator';
 import { EditUserDto } from './dto/edit-user.dto';
-import { User } from 'src/users/user.entity';
-import { use } from 'passport';
 import { Subscription } from 'src/payments/entities/subscription.entity';
 import { Payment } from 'src/payments/entities/payments.entity';
 
 @Controller('books')
 export class BooksController {
   constructor(private readonly booksService: BooksService) {}
+
   @Get('/getall')
   async findAll(@Response() res) {
     const books = await this.booksService.findAll();
@@ -533,5 +532,16 @@ export class BooksController {
     }
 
     return this.booksService.getAudioBookFiles(bookId);
+  }
+
+  @Get(':id')
+  async getBookById(@Param('id') bookId: number, @Res() res) {
+    const book = await this.booksService.getBookById(bookId);
+
+    if (book.status !== 3 && book.status !== 6) {
+      return res.redirect(process.env.FRONT_URL);
+    }
+
+    res.json(book);
   }
 }

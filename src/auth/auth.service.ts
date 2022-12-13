@@ -37,6 +37,7 @@ export class AuthService {
     const donations = await Payment.find({
       from_user: user.id,
       payment_type: 'donation_to_project',
+      status: 'verified',
     });
 
     user.donated = 0;

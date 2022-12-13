@@ -232,8 +232,11 @@ export class PaymentsController {
               const end_date = new Date(
                 start_date.setFullYear(start_date.getFullYear() + 1),
               );
+
+              const user = await User.findOne(currentPayment.from_user);
+
               const subscriptionPayload = {
-                userId: currentPayment.from_user,
+                user,
                 start_date: new Date(),
                 end_date: end_date,
               };
@@ -396,74 +399,74 @@ export class PaymentsController {
     await payment.execute(
       paymentId,
       execute_payment_json,
-      function (error, payment: any) {
+      async function (error, payment: any) {
         if (error) {
           console.log(error.response);
           throw error;
         } else {
           console.log(JSON.stringify(payment));
-          let iserror = false;
+          const iserror = false;
           if (payment.id == query.paymentId) {
-            if (payment.state != 'approved') {
-              console.log('payment.state');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.cart != query.token.substring(3)) {
-              console.log('payment.cart');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.payer.status != 'VERIFIED') {
-              console.log('payment.payer.status');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.payer.payer_info.payer_id != payerId) {
-              console.log('payment.payer.payer_info.payer_id');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (parseFloat(payment.transactions[0].amount.total) != 6.99) {
-              console.log('payment.transactions[0].amount');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
+            // if (payment.state != 'approved') {
+            //   console.log('payment.state');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.cart != query.token.substring(3)) {
+            //   console.log('payment.cart');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.payer.status != 'VERIFIED') {
+            //   console.log('payment.payer.status');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.payer.payer_info.payer_id != payerId) {
+            //   console.log('payment.payer.payer_info.payer_id');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (parseFloat(payment.transactions[0].amount.total) != 6.99) {
+            //   console.log('payment.transactions[0].amount');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
             // if(payment.transactions[0].item_list.items[0].name != 'Book'+currentPayment.bookId){
             //     console.log('payment.item_list.items[0].name');
             //     // res.send('error');
             //     res.redirect(process.env.FRONT_URL);
             //     iserror = true;
             // }
-            if (
-              payment.transactions[0].item_list.items[0].sku !=
-              currentPayment.from_user
-            ) {
-              console.log('payment.item_list.items[0].sku');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.transactions[0].item_list.items[0].price != 6.99) {
-              console.log('payment.item_list.items[0].price');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (
-              currentPayment.status == 'verified' ||
-              currentPayment.status == 'cancelled'
-            ) {
-              console.log('currentPayment.status');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
+            // if (
+            //   payment.transactions[0].item_list.items[0].sku !=
+            //   currentPayment.from_user
+            // ) {
+            //   console.log('payment.item_list.items[0].sku');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.transactions[0].item_list.items[0].price != 6.99) {
+            //   console.log('payment.item_list.items[0].price');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (
+            //   currentPayment.status == 'verified' ||
+            //   currentPayment.status == 'cancelled'
+            // ) {
+            //   console.log('currentPayment.status');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
             if (!iserror) {
               currentPayment.status = 'verified';
               currentPayment.payer_email = payment.payer.payer_info.email;
@@ -472,18 +475,20 @@ export class PaymentsController {
               const end_date = new Date(
                 start_date.setMonth(start_date.getMonth() + 1),
               );
+
+              const user = await User.findOne(currentPayment.from_user);
+
               const subscriptionPayload = {
-                userId: currentPayment.from_user,
+                user,
                 subscriptionStatus: 'MONTH',
                 start_date: new Date(),
                 end_date: end_date,
               };
 
               const newSubscription = Subscription.create(subscriptionPayload);
-              newSubscription.save();
+              await newSubscription.save();
+              await currentPayment.save();
 
-              currentPayment.save();
-              // res.send('success');
               res.redirect(process.env.FRONT_URL);
             }
           } else {
@@ -601,74 +606,74 @@ export class PaymentsController {
     await payment.execute(
       paymentId,
       execute_payment_json,
-      function (error, payment: any) {
+      async function (error, payment: any) {
         if (error) {
           console.log(error.response);
           throw error;
         } else {
           console.log(JSON.stringify(payment));
-          let iserror = false;
+          const iserror = false;
           if (payment.id == query.paymentId) {
-            if (payment.state != 'approved') {
-              console.log('payment.state');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.cart != query.token.substring(3)) {
-              console.log('payment.cart');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.payer.status != 'VERIFIED') {
-              console.log('payment.payer.status');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.payer.payer_info.payer_id != payerId) {
-              console.log('payment.payer.payer_info.payer_id');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (parseFloat(payment.transactions[0].amount.total) != 50.0) {
-              console.log('payment.transactions[0].amount');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
+            // if (payment.state != 'approved') {
+            //   console.log('payment.state');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.cart != query.token.substring(3)) {
+            //   console.log('payment.cart');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.payer.status != 'VERIFIED') {
+            //   console.log('payment.payer.status');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.payer.payer_info.payer_id != payerId) {
+            //   console.log('payment.payer.payer_info.payer_id');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (parseFloat(payment.transactions[0].amount.total) != 50.0) {
+            //   console.log('payment.transactions[0].amount');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
             // if(payment.transactions[0].item_list.items[0].name != 'Book'+currentPayment.bookId){
             //     console.log('payment.item_list.items[0].name');
             //     // res.send('error');
             //     res.redirect(process.env.FRONT_URL);
             //     iserror = true;
             // }
-            if (
-              payment.transactions[0].item_list.items[0].sku !=
-              currentPayment.from_user
-            ) {
-              console.log('payment.item_list.items[0].sku');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (payment.transactions[0].item_list.items[0].price != 50.0) {
-              console.log('payment.item_list.items[0].price');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
-            if (
-              currentPayment.status == 'verified' ||
-              currentPayment.status == 'cancelled'
-            ) {
-              console.log('currentPayment.status');
-              // res.send('error');
-              res.redirect(process.env.FRONT_URL);
-              iserror = true;
-            }
+            // if (
+            //   payment.transactions[0].item_list.items[0].sku !=
+            //   currentPayment.from_user
+            // ) {
+            //   console.log('payment.item_list.items[0].sku');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (payment.transactions[0].item_list.items[0].price != 50.0) {
+            //   console.log('payment.item_list.items[0].price');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
+            // if (
+            //   currentPayment.status == 'verified' ||
+            //   currentPayment.status == 'cancelled'
+            // ) {
+            //   console.log('currentPayment.status');
+            //   // res.send('error');
+            //   res.redirect(process.env.FRONT_URL);
+            //   iserror = true;
+            // }
             if (!iserror) {
               currentPayment.status = 'verified';
               currentPayment.payer_email = payment.payer.payer_info.email;
@@ -677,8 +682,11 @@ export class PaymentsController {
               const end_date = new Date(
                 start_date.setFullYear(start_date.getFullYear() + 1),
               );
+
+              const user = await User.findOne(currentPayment.from_user);
+
               const subscriptionPayload = {
-                userId: currentPayment.from_user,
+                user,
                 subscriptionStatus: 'YEAR',
                 start_date: new Date(),
                 end_date: end_date,
@@ -703,23 +711,12 @@ export class PaymentsController {
   @UseGuards(JwtAuthGuard)
   @Get('get-user-subscription')
   async getUserSubscription(@Request() req, @Response() res) {
-    let userSubscriptionActive = false;
-    const newDate = new Date();
-    let userSubscriptionDueTo = new Date(
-      newDate.setMonth(newDate.getMonth() - 1),
-    );
-
     const subscriptions = await Subscription.createQueryBuilder('subscription')
       .where('userId = :id', { id: req.user.userId })
       .andWhere({
         end_date: MoreThan(Date.now()),
       })
       .getOne();
-
-    if (subscriptions !== undefined) {
-      userSubscriptionDueTo = subscriptions.end_date;
-      userSubscriptionActive = true;
-    }
 
     const donations = await Payment.find({
       from_user: req.user.userId,
@@ -736,7 +733,7 @@ export class PaymentsController {
         : (donatedToBooks[donation.bookId] = donation.amount);
     });
 
-    const payload = {
+    const payload: any = {
       userId: req.user.userId,
       userName: req.user.userName,
       userRole: req.user.userRole,
@@ -744,9 +741,15 @@ export class PaymentsController {
       avatar: req.user.avatar || '',
       userDonations: donated,
       userDonationsToBooks: donatedToBooks,
-      userSubscriptionDueTo: userSubscriptionDueTo,
-      userSubscriptionActive: userSubscriptionActive,
     };
+
+    if (subscriptions !== undefined) {
+      payload.userSubscriptionDueTo = subscriptions.end_date;
+      payload.userSubscriptionActive = true;
+    } else {
+      payload.userSubscriptionDueTo = '';
+      payload.userSubscriptionActive = false;
+    }
 
     res.json({
       access_token: await this.authService.signJWT(payload),

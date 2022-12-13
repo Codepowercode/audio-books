@@ -1034,4 +1034,14 @@ export class BooksService {
 
     return { audioBooks };
   }
+
+  async getBookById(bookId: number) {
+    const book = await Book.findOne(bookId);
+
+    if (!book) {
+      throw new NotFoundException('Book not found');
+    }
+
+    return book;
+  }
 }
